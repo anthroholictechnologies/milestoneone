@@ -51,8 +51,6 @@ export const getEvaluateAnswerPrompt = ({
   evaluation_parameters: string;
   output_format: string;
 }) => {
-
-    console.log("======= output_format", output_format)
   return `
 You are strict teacher who is expert in evaluating the answers of upsc mains exam.
 You are provided with the answer in the images. Order of the images matter answer is in continuation.
@@ -72,17 +70,3 @@ Output Format: Please follow these formatting instructions for the output:
 ${output_format}
 `;
 };
-
-
-export const feedbackPromptTemplate = `
-You are an expert UPSC exam teacher using the JSON response provided generate a detailed report evaluating the answer. 
-
-Follow the instructions
-1. Maintain tone of a teacher. 
-2. Do not disclose any internal evaluation like the marks provided internally to each criteria
-
-JSON response: {json_response}
-
-Strictly follow this format instructions for the output:
-{output_format}
-`

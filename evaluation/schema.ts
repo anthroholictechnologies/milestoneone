@@ -26,6 +26,11 @@ export const evaluationCriteriaSchema = z.array(
 );
 
 export const evaluationResponse = z.object({
+  improved_answer: z
+    .string()
+    .describe(
+      "The improved answer should include embedded inline notes explaining the changes made at specific points in the text. These notes should provide clarity on why the change was made and how it improves the response."
+    ),
   parameter_scores: z
     .array(
       z.object({
@@ -49,7 +54,12 @@ export const evaluationResponse = z.object({
         justification: z
           .string()
           .describe(
-            "A detailed and specific explanation for the score given for this parameter. Avoid superficial explanations. If pointing out mistakes, provide concrete examples from the answer where the mistake occurred. Similarly, if praising, point out specific areas of the answer where the student performed well. This should help the student understand where they need to improve or what they did right."
+            "A detailed, specific, and constructive explanation for the score assigned to this parameter. The justification should: \n" +
+              "- Clearly outline why the score was awarded and how well the answer met the evaluation criteria.\n" +
+              "- Highlight positive aspects of the answer, such as clarity, relevance, or creativity, if applicable.\n" +
+              "- If the score is less than 50% of the total marks for this parameter, provide actionable feedback focusing on key shortcomings. Mention specific areas or examples from the student's response where improvement is required.\n" +
+              "- Avoid generic statements and include context-based insights to ensure the student understands the feedback and can act upon it effectively.\n" +
+              "- Ensure constructive language to motivate the student to improve while being honest about their performance."
           ),
       })
     )
@@ -90,10 +100,5 @@ export const evaluationResponse = z.object({
     })
     .describe(
       "Overall feedback about the student's answer, including a summary and actionable suggestions with implemented examples."
-    ),
-  improved_answer: z
-    .string()
-    .describe(
-      "An improved version of the student's answer, incorporating all suggestions and changes. The improved answer should include embedded inline notes explaining the changes made at specific points in the text. These notes should provide clarity on why the change was made and how it improves the response."
     ),
 });

@@ -1,5 +1,8 @@
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import {
+  OutputFixingParser,
+  StructuredOutputParser,
+} from "langchain/output_parsers";
 import _ from "lodash";
 import path from "path";
 import fs from "fs";
@@ -14,7 +17,6 @@ import {
   predictSubjectsPromptTemplate,
   filterSubjectSpecificCriteria,
   getEvaluateAnswerPrompt,
-  feedbackPromptTemplate,
 } from "./promptTemplates";
 import { model } from "./model";
 import {
@@ -28,6 +30,7 @@ import {
   subjectParameters,
 } from "./criteriaDatabase";
 import { HumanMessage } from "@langchain/core/messages";
+import z, { unknown } from "zod";
 
 /**
  * Type Definitions
@@ -182,8 +185,8 @@ export const evaluateAnswer = async (
     );
 
     // Step 5: Prepare and Evaluate Answer
-    const images = ["answerone.jpg", "answertwo.jpg", "answerthree.jpg"].map(
-      (file) => imageToBase64WithSize(path.join(__dirname, file))
+    const images = ["aone.jpeg", "atwo.jpeg", "athree.jpeg"].map((file) =>
+      imageToBase64WithSize(path.join(__dirname, file))
     );
 
     const outputParser =
@@ -203,11 +206,26 @@ export const evaluateAnswer = async (
       ],
     });
 
-    const evaluation = await model.invoke([message]);
+    const response = await model.invoke([message]);
 
-    return evaluation.content
+    const evaluation = JSON.parse(
+      (response.content as string).replace(/```json|```/g, "").trim()
+    ) as unknown as z.infer<typeof evaluationResponse>;
 
-   
+    console.log("Evaluation====", evaluation);
+
+    return {
+      totalScore: Math.floor(evaluation.total_score),
+      summary: evaluation.overall_feedback.summary,
+      suggestions: evaluation.overall_feedback.suggestions,
+      goodParts: evaluation.parameter_scores
+        .filter((p) => p.score / p.max_score >= 0.5)
+        .map((p) => p.justification),
+      weakerParts: evaluation.parameter_scores
+        .filter((p) => p.score / p.max_score < 0.5)
+        .map((p) => p.justification),
+      improvedAnswer: evaluation.improved_answer,
+    };
   } catch (error) {
     console.error("Error evaluating answer:", error);
     throw error;
@@ -216,7 +234,9 @@ export const evaluateAnswer = async (
 
 // Example Usage
 evaluateAnswer(
-  "What is IBCA and NTCA? What is the role of NGO'S in tiger preservation in INDIA?",
-  Exams.GS3,
+  `Analyze the factors that led to the decline
+of the Mughal Empire and the emergence of
+successor states in India. (250 Words)`,
+  Exams.GS1,
   15
 ).then((result) => console.log("Final Evaluation Result:", result));

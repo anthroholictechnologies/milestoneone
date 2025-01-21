@@ -5,5 +5,4 @@ export const model = new ChatGoogleGenerativeAI({
   maxOutputTokens: 5000,
   apiKey: "AIzaSyDgRxvz1qOVKRVKzDnGtURs77RloUn5-tI",
   topP: 1,
-  verbose: true
 });
